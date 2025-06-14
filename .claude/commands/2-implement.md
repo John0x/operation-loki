@@ -5,31 +5,32 @@ Your sole objective in this prompt is to implement every unchecked todo item in 
 Workflow for this implementation phase:
 
 1. Read `tasks/todo.md`; if it does not exist (e.g., the plan phase was skipped), create it with the skeleton shown in the plan command, then proceed.
-2. Read tasks/todo.md and identify all todo items that are still unchecked ("[ ]").
-   • If a task contains nested acceptance criteria checkboxes, check those off individually as you satisfy them.
-2. For each unchecked item:
-   • Make the necessary code changes, tests, or documentation updates to satisfy the item.
-   • Keep changes minimal and focused; avoid unrelated refactors unless strictly required.
-   • After completing the work for that item, update tasks/todo.md by
-     – changing "[ ]" to "[x]",
-     – adding a one-clause note describing what was done.
-4. Run automated validation: `npm test && eslint . --max-warnings 0`.
-   • If either step fails, stop and ask the user for guidance—do NOT auto-fix blindly.
-   • Once green, proceed.
-5. When all items are complete, append a **Review** section to tasks/todo.md that includes:
-   • A concise summary of the changes made.
-   • Any challenges encountered and how you resolved them.
-   • Suggestions for future improvements.
+
+2. Identify all todo items that are still unchecked ("[ ]"). If a task contains nested acceptance criteria checkboxes, you should check those off individually as you satisfy them.
+
+3. For each unchecked item:
+   a. Make the necessary code changes, tests, or documentation updates to satisfy the item.
+   b. Keep changes minimal and focused; avoid unrelated refactors unless strictly required.
+   c. After completing the work for that item, update the todo list by:
+      - Changing "[ ]" to "[x]"
+      - Adding a one-clause note describing what was done
+
+5. When all items are complete, append a **Review** section to the todo list that includes:
+   - A concise summary of the changes made
+   - Any challenges encountered and how you resolved them
+   - Suggestions for future improvements
+
+4. Validate the implementation using the validation instructions for the project.
+   If the validation step fails, stop and ask the user for guidance. Do NOT auto-fix blindly.
+
 6. Produce a final output that contains:
-   • The full, updated tasks/todo.md file.
-   • A brief confirmation message that implementation is complete and any next steps.
-7. After successful validation, you may optionally invoke `/project:review` for a static code review and `/project:commit` to push the changes.
+   - The full, updated tasks/todo.md file
+   - A brief confirmation message that implementation is complete and any next steps
 
 Important constraints:
-• Do NOT add new todo items—if new work surfaces, complete it immediately without expanding the list.
-• Use tasks/todo.md directly; do not use built-in TodoRead or TodoWrite tools.
-• Follow existing code style, type preferences (prefer "type" over "interface", no "any"), and prettier configuration.
-• Be terse but thorough in explanations.
-• Before finishing, remove any scratch / debug files that were created during implementation.
+- Do NOT change anything that is not part of the plan. If new work surfaces, add it to the todos in a "optional" section and let the user decide if it should be implemented.
+- Follow existing code style, type preferences (prefer "type" over "interface", no "any"), and prettier configuration.
+- Be terse but thorough in explanations.
+- Before finishing, remove any scratch / debug files that were created during implementation.
 
-Begin by opening tasks/todo.md and implementing the first unchecked task.
+Your final output should only include the updated tasks/todo.md file and the confirmation message. Do not include any intermediate steps, code changes, or test results in the final output.
