@@ -2,42 +2,41 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-This is a Next.js 15 web application called "kitesurf-map" built with React 19, TypeScript, and Tailwind CSS 4. It uses the modern App Router architecture.
+## Development Commands
 
-## Commands
-- `npm run dev` - Start development server (runs on http://localhost:3000)
-- `npm run build` - Build for production
+- `npm run dev` - Start development server on http://localhost:3000
+- `npm run build` - Build production application
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm run test` - Run Playwright end-to-end tests
 
 ## Architecture
-- **App Router**: Uses Next.js App Router with the `app/` directory structure
-- **Layout**: Root layout in `app/layout.tsx` sets up fonts (Geist Sans and Geist Mono) and basic HTML structure
-- **Styling**: Tailwind CSS 4 with PostCSS configuration
-- **Fonts**: Uses Next.js font optimization with Google Fonts (Geist family)
-- **TypeScript**: Fully typed with strict TypeScript configuration
 
-## Key Directories
+This is a Next.js 15 application using the App Router with:
+
+- **Framework**: Next.js 15 with React 19
+- **Styling**: Tailwind CSS 4 with custom CSS variables
+- **UI Components**: shadcn/ui components in "new-york" style with Radix primitives
+- **Testing**: Playwright for end-to-end testing
+- **Fonts**: Geist Sans and Geist Mono from Google Fonts
+
+### Project Structure
+
 - `app/` - Next.js App Router pages and layouts
-- `public/` - Static assets (SVGs, images)
+- `components/ui/` - shadcn/ui components (button, card, input, label, select, textarea)
+- `lib/utils.ts` - Utility functions including Tailwind class merging
+- `tests/` - Playwright test files
+- `public/` - Static assets
 
-## Tech Stack
-- Next.js 15.3.3 (App Router)
-- React 19
-- TypeScript 5
-- Tailwind CSS 4
-- shadcn/ui components
-- Radix UI primitives
-- ESLint 9
+### shadcn/ui Configuration
 
-## shadcn/ui
-The project uses shadcn/ui for UI components. Available base components:
-- Button (`components/ui/button.tsx`)
-- Card (`components/ui/card.tsx`) 
-- Input (`components/ui/input.tsx`)
-- Label (`components/ui/label.tsx`)
-- Textarea (`components/ui/textarea.tsx`)
-- Select (`components/ui/select.tsx`)
+Components are configured with:
+- Style: "new-york"
+- Base color: neutral
+- CSS variables enabled
+- Icon library: lucide-react
+- Path aliases: `@/components`, `@/lib/utils`, etc.
 
-Add more components with: `npx shadcn@latest add [component-name]`
+### Testing
+
+Playwright tests are configured to run against all major browsers (Chrome, Firefox, Safari) with base URL http://localhost:3000. Tests expect the development server to be running manually.
