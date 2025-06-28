@@ -17,10 +17,30 @@ const GOOGLE_DOMAINS = [
   'googlesyndication.com',
   'google.com/pagead',
   'google.com/ads',
+  'google.com/ccm',
+  'analytics.google.com',
+  'stats.g.doubleclick.net',
+  'region1.analytics.google.com',
+  'google.de/ads',
 ];
 
 function isGoogleTrackingRequest(url: string): boolean {
-  return GOOGLE_DOMAINS.some(domain => url.includes(domain));
+  // Check against known Google domains
+  if (GOOGLE_DOMAINS.some(domain => url.includes(domain))) {
+    return true;
+  }
+  
+  // Check for custom GTM subdomains (pattern: gtm.*.*/g/collect)
+  if (url.includes('/g/collect') && url.includes('gtm.')) {
+    return true;
+  }
+  
+  // Check for Google Analytics measurement protocol URLs
+  if (url.includes('/collect') && (url.includes('gcs=') || url.includes('gtm='))) {
+    return true;
+  }
+  
+  return false;
 }
 
 function parseConsentFromUrl(url: string): { gcs?: string; gcd?: string } {
@@ -111,10 +131,13 @@ export async function POST(request: NextRequest) {
 
     // Track network requests
     const googleRequests: string[] = [];
+    const allRequests: string[] = [];
     let firstGoogleRequest: string | null = null;
 
     page.on('request', (request) => {
       const requestUrl = request.url();
+      allRequests.push(requestUrl);
+      
       if (isGoogleTrackingRequest(requestUrl)) {
         googleRequests.push(requestUrl);
         if (!firstGoogleRequest) {
@@ -145,15 +168,35 @@ export async function POST(request: NextRequest) {
 
     // Analyze results
     if (googleRequests.length === 0) {
+      // Debug: include some sample requests
+      const sampleRequests = allRequests.slice(0, 10);
       return NextResponse.json({
         status: "no_tracking",
         message: "No Google tracking requests detected",
-        details: "The website does not appear to use Google Analytics, Google Ads, or Google Tag Manager"
+        details: `The website does not appear to use Google Analytics, Google Ads, or Google Tag Manager. Found ${allRequests.length} total requests. First 10: ${sampleRequests.join(', ')}`
       });
     }
 
-    // Parse consent from the first Google request
-    const { gcs, gcd } = parseConsentFromUrl(firstGoogleRequest!);
+    // Find the first Google request that contains consent parameters
+    let consentRequest = null;
+    for (const request of googleRequests) {
+      const { gcs } = parseConsentFromUrl(request);
+      if (gcs) {
+        consentRequest = request;
+        break;
+      }
+    }
+    
+    if (!consentRequest) {
+      return NextResponse.json({
+        status: "unknown",
+        message: "No consent mode detected - gcs parameter not found in Google tracking requests",
+        details: `Found ${googleRequests.length} Google requests but none contain consent parameters. All requests: ${googleRequests.join(' | ')}`
+      });
+    }
+    
+    // Parse consent from the request that contains consent parameters
+    const { gcs, gcd } = parseConsentFromUrl(consentRequest);
     const result = analyzeConsentStatus(gcs, gcd);
 
     return NextResponse.json(result);
