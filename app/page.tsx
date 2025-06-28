@@ -5,32 +5,49 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, Shield, CheckCircle, XCircle, Globe, Sparkles } from "lucide-react"
+import { Search, Shield, CheckCircle, XCircle, Globe, Sparkles, AlertCircle } from "lucide-react"
+
+interface ConsentResult {
+  status: "pass" | "fail" | "unknown" | "no_tracking";
+  gcsValue?: string;
+  gcdValue?: string;
+  message: string;
+  details?: string;
+}
 
 export default function ConsentModeChecker() {
   const [url, setUrl] = useState("")
   const [isChecking, setIsChecking] = useState(false)
-  const [result, setResult] = useState<{
-    status: "pass" | "fail" | null
-    message: string
-  }>({ status: null, message: "" })
+  const [result, setResult] = useState<ConsentResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const handleCheck = async () => {
     if (!url) return
 
     setIsChecking(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    setError(null)
+    setResult(null)
 
-    // Mock result - in real app, this would be an actual API call
-    const mockResult = Math.random() > 0.5
-    setResult({
-      status: mockResult ? "pass" : "fail",
-      message: mockResult
-        ? "Google Consent Mode is properly configured and denies tracking by default"
-        : "Google Consent Mode is not configured or allows tracking by default",
-    })
-    setIsChecking(false)
+    try {
+      const response = await fetch('/api/check-consent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setResult(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setIsChecking(false)
+    }
   }
 
   return (
@@ -116,21 +133,44 @@ export default function ConsentModeChecker() {
                     </div>
                   </div>
 
+                  {/* Error Section */}
+                  {error && (
+                    <div className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
+                      <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+
+                      <div className="flex items-start gap-4 p-6 rounded-2xl bg-red-900/20 backdrop-blur-sm border border-red-500/20">
+                        <div className="p-3 rounded-full bg-red-900/50 text-red-400">
+                          <XCircle className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-red-400 mb-2">Error</h4>
+                          <p className="text-gray-300 leading-relaxed">{error}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Results Section */}
-                  {result.status && (
+                  {result && (
                     <div className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
                       <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
 
                       <div className="flex items-start gap-4 p-6 rounded-2xl bg-gray-800/30 backdrop-blur-sm border border-white/10">
                         <div
                           className={`p-3 rounded-full ${
-                            result.status === "pass" ? "bg-green-900/50 text-green-400" : "bg-red-900/50 text-red-400"
+                            result.status === "pass" 
+                              ? "bg-green-900/50 text-green-400" 
+                              : result.status === "fail"
+                              ? "bg-red-900/50 text-red-400"
+                              : "bg-yellow-900/50 text-yellow-400"
                           }`}
                         >
                           {result.status === "pass" ? (
                             <CheckCircle className="w-6 h-6" />
-                          ) : (
+                          ) : result.status === "fail" ? (
                             <XCircle className="w-6 h-6" />
+                          ) : (
+                            <AlertCircle className="w-6 h-6" />
                           )}
                         </div>
 
@@ -141,13 +181,38 @@ export default function ConsentModeChecker() {
                               className={`${
                                 result.status === "pass"
                                   ? "bg-green-500 hover:bg-green-600"
-                                  : "bg-red-500 hover:bg-red-600"
+                                  : result.status === "fail"
+                                  ? "bg-red-500 hover:bg-red-600"
+                                  : "bg-yellow-500 hover:bg-yellow-600"
                               } text-white font-semibold px-3 py-1`}
                             >
-                              {result.status === "pass" ? "PASS" : "FAIL"}
+                              {result.status.toUpperCase()}
                             </Badge>
                           </div>
-                          <p className="text-gray-300 leading-relaxed">{result.message}</p>
+                          <p className="text-gray-300 leading-relaxed mb-3">{result.message}</p>
+                          
+                          {result.details && (
+                            <div className="text-sm text-gray-400 bg-gray-800/50 rounded-lg p-3">
+                              <strong>Details:</strong> {result.details}
+                            </div>
+                          )}
+                          
+                          {(result.gcsValue || result.gcdValue) && (
+                            <div className="mt-3 space-y-2">
+                              {result.gcsValue && (
+                                <div className="text-sm">
+                                  <span className="text-gray-400">GCS Parameter:</span>
+                                  <code className="ml-2 bg-gray-800 px-2 py-1 rounded text-green-400">{result.gcsValue}</code>
+                                </div>
+                              )}
+                              {result.gcdValue && (
+                                <div className="text-sm">
+                                  <span className="text-gray-400">GCD Parameter:</span>
+                                  <code className="ml-2 bg-gray-800 px-2 py-1 rounded text-green-400">{result.gcdValue}</code>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
