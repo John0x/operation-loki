@@ -40,3 +40,7 @@ Components are configured with:
 ### Testing
 
 Playwright tests are configured to run against all major browsers (Chrome, Firefox, Safari) with base URL http://localhost:3000. Tests expect the development server to be running manually.
+
+## Important Reminders
+
+- Please don't commit & push without asking!

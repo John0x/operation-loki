@@ -123,7 +123,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Launch browser
-    const browser = await chromium.launch();
+    let browser;
+    try {
+      browser = await chromium.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { error: `Failed to launch browser: ${error instanceof Error ? error.message : 'Unknown error'}. Please ensure Playwright is properly installed.` },
+        { status: 500 }
+      );
+    }
+
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     });
